@@ -1,0 +1,102 @@
+
+@Metadata.layer: #CORE
+@Search.searchable: true
+@UI.headerInfo: {
+  typeName:       'Travel',
+  typeNamePlural: 'Travels',
+  title: {
+    type:  #STANDARD,
+    label: 'Travel',
+    value: 'TravelId'
+  }
+}
+annotate view ZC_Travel_abhi     with
+{
+
+  @UI.facet: [
+    {
+      id:       'Travel',
+      label:    'Travel Details',
+      type:     #IDENTIFICATION_REFERENCE,
+      position: 10,
+      purpose:  #STANDARD
+    },
+    {
+      id:            'Booking',
+      label:         'Booking Details',
+      type:          #LINEITEM_REFERENCE,
+      position:      20,
+      targetElement: '_booking'
+    }
+  ]
+
+  @UI.lineItem: [
+    { position: 10, label: 'Travel ID' },
+    { type: #FOR_ACTION, dataAction: 'CopyTravel', label: 'Copy Travel' }
+  ]
+  @Search.defaultSearchElement: true
+  @UI.identification: [ { position: 10 } ]
+  TravelId;
+
+  @UI: {
+    selectionField: [ { position: 10 } ],
+    lineItem:       [ { position: 20, label: 'Agency ID' } ]
+  }
+  @Search.defaultSearchElement: true
+  @Consumption.valueHelpDefinition: [
+    { entity: { name: '/dmo/I_agency', element: 'AgencyID' } }
+  ]
+  @UI.identification: [ { position: 20 } ]
+  AgencyId;
+  //AgencyName;
+
+  @UI.selectionField: [ { position: 20 } ]
+  @UI.lineItem:       [ { position: 30, label: 'Customer ID' } ]
+  @Search.defaultSearchElement: true
+  @Consumption.valueHelpDefinition: [
+    { entity: { name: '/dmo/I_customer', element: 'CustomerID' } }
+  ]
+  @UI.identification: [ { position: 30 } ]
+  CustomerId;
+  //CustomerName;
+
+  @UI.lineItem:       [ { position: 40, label: 'Begin Date' } ]
+  @UI.identification: [ { position: 40 } ]
+  BeginDate;
+
+  @UI.lineItem:       [ { position: 50, label: 'End Date' } ]
+  @UI.identification: [ { position: 50 } ]
+  EndDate;
+
+  //@UI.lineItem: [{ position: 55, label: 'Booking Fee' }]
+  @UI.identification: [ { position: 55 } ]
+  BookingFee;
+
+  @UI.lineItem:       [ { position: 60, label: 'Total Price' } ]
+  @UI.identification: [ { position: 60 } ]
+  TotalPrice;
+
+  @Consumption.valueHelpDefinition: [
+    { entity: { name: 'I_currency', element: 'Currency' } }
+  ]
+  CurrencyCode;
+
+  //@UI.lineItem: [{ position: 65, label: 'Description' }]
+  @UI.identification: [ { position: 65 } ]
+  Description;
+
+  @UI.selectionField: [ { position: 30 } ]
+  @UI.lineItem:       [ { position: 70, label: 'Overall Status' } ]
+  @Search.defaultSearchElement: true
+  @Consumption.valueHelpDefinition: [
+    { entity: { name: '/dmo/I_Overall_status_vh', element: 'OverallStatus' } }
+  ]
+  @UI.identification: [ { position: 70 } ]
+  @UI.textArrangement: #TEXT_ONLY
+  OverallStatus;
+
+  // Text;
+  @UI.hidden: true
+  LastChangedAt;
+
+}
