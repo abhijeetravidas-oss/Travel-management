@@ -1,0 +1,337 @@
+ CLASS lsc_zi_travel_abhi_m DEFINITION
+  INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zi_travel_abhi_m IMPLEMENTATION.
+
+  METHOD save_modified.
+
+    DATA : lt_travel_log   TYPE STANDARD TABLE OF zlog_travel_m.
+    DATA : lt_travel_log_c TYPE STANDARD TABLE OF zlog_travel_m.
+    DATA : lt_travel_log_u TYPE STANDARD TABLE OF zlog_travel_m.
+
+    IF create-zi_travel_abhi_m IS NOT INITIAL.
+
+      lt_travel_log = CORRESPONDING #( create-zi_travel_abhi_m ).
+
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_travel_log>).
+
+        <ls_travel_log>-changing_operation = 'CREATE'.
+        GET TIME STAMP FIELD <ls_travel_log>-created_at.
+
+        READ TABLE create-zi_travel_abhi_m ASSIGNING FIELD-SYMBOL(<ls_travel>)
+          WITH TABLE KEY entity
+          COMPONENTS TravelId = <ls_travel_log>-travelid.
+
+        IF sy-subrc IS INITIAL.
+
+          IF <ls_travel>-%control-BookingFee = cl_abap_behv=>flag_changed.
+            <ls_travel_log>-changed_field_name = 'Booking Fee'.
+            <ls_travel_log>-changed_value      = <ls_travel>-BookingFee.
+
+            TRY.
+                <ls_travel_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+            ENDTRY.
+
+            APPEND <ls_travel_log> TO lt_travel_log_c.
+          ENDIF.
+
+          IF <ls_travel>-%control-OverallStatus = cl_abap_behv=>flag_changed.
+            <ls_travel_log>-changed_field_name = 'Overall Status'.
+            <ls_travel_log>-changed_value      = <ls_travel>-OverallStatus.
+
+            TRY.
+                <ls_travel_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+            ENDTRY.
+
+            APPEND <ls_travel_log> TO lt_travel_log_c.
+          ENDIF.
+
+        ENDIF.
+      ENDLOOP.
+
+      INSERT zlog_travel_m FROM TABLE @lt_travel_log_c.
+
+    ENDIF.
+
+    IF update-zi_travel_abhi_m IS NOT INITIAL.
+
+      lt_travel_log = CORRESPONDING #( update-zi_travel_abhi_m ).
+
+      LOOP AT update-zi_travel_abhi_m ASSIGNING FIELD-SYMBOL(<ls_log_update>).
+
+        ASSIGN lt_travel_log[ travelid = <ls_log_update>-travelid ]
+          TO FIELD-SYMBOL(<ls_log_u>).
+
+        <ls_log_u>-changing_operation = 'UPDATE'.
+        GET TIME STAMP FIELD <ls_log_u>-created_at.
+
+        IF <ls_log_update>-%control-customerid = if_abap_behv=>mk-on.
+          <ls_log_u>-changed_value      = <ls_log_update>-customerid.
+          <ls_log_u>-changed_field_name = 'customer_id'.
+
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH cx_uuid_error.
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_travel_log_u.
+        ENDIF.
+
+        IF <ls_log_update>-%control-description = if_abap_behv=>mk-on.
+          <ls_log_u>-changed_value      = <ls_log_update>-description.
+          <ls_log_u>-changed_field_name = 'description'.
+
+          TRY.
+              <ls_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH cx_uuid_error.
+          ENDTRY.
+
+          APPEND <ls_log_u> TO lt_travel_log_u.
+        ENDIF.
+
+      ENDLOOP.
+
+      INSERT zlog_travel_m FROM TABLE @lt_travel_log_u.
+
+    ENDIF.
+
+    IF delete-zi_travel_abhi_m IS NOT INITIAL.
+
+      lt_travel_log = CORRESPONDING #( delete-zi_travel_abhi_m ).
+
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_log_del>).
+        <ls_log_del>-changing_operation = 'DELETE'.
+        GET TIME STAMP FIELD <ls_log_del>-created_at.
+
+        TRY.
+            <ls_log_del>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          CATCH cx_uuid_error.
+        ENDTRY.
+      ENDLOOP.
+
+      INSERT zlog_travel_m FROM TABLE @lt_travel_log.
+
+    ENDIF.
+
+**********************************************************************
+**********************************************************************
+
+    DATA: lt_book_suppl TYPE STANDARD TABLE OF zbooksuppl_abh_m.
+
+    IF create-zi_booksuppl_abhi_m IS NOT INITIAL.
+
+      lt_book_suppl = VALUE #(
+        FOR ls_booksup IN create-zi_booksuppl_abhi_m (
+          travel_id              = ls_booksup-TravelId
+          booking_id             = ls_booksup-BookingId
+          booking_supplement_id  = ls_booksup-BookingSupplementId
+          supplement_id          = ls_booksup-SupplementId
+          price                  = ls_booksup-Price
+          currency_code          = ls_booksup-CurrencyCode
+          last_changed_at        = ls_booksup-LastChangedAt
+        )
+      ).
+
+      INSERT zbooksuppl_abh_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+    IF update-zi_booksuppl_abhi_m IS NOT INITIAL.
+
+      lt_book_suppl = VALUE #(
+        FOR ls_booksup IN update-zi_booksuppl_abhi_m (
+          travel_id              = ls_booksup-TravelId
+          booking_id             = ls_booksup-BookingId
+          booking_supplement_id  = ls_booksup-BookingSupplementId
+          supplement_id          = ls_booksup-SupplementId
+          price                  = ls_booksup-Price
+          currency_code          = ls_booksup-CurrencyCode
+          last_changed_at        = ls_booksup-LastChangedAt
+        )
+      ).
+
+      UPDATE zbooksuppl_abh_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+    IF delete-zi_booksuppl_abhi_m IS NOT INITIAL.
+
+      lt_book_suppl = VALUE #(
+        FOR ls_del IN delete-zi_booksuppl_abhi_m (
+          travel_id             = ls_del-TravelId
+          booking_id            = ls_del-BookingId
+          booking_supplement_id = ls_del-BookingSupplementId
+        )
+      ).
+
+      DELETE zbooksuppl_abh_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+2.ZCL_BP_BOOKING_ABHI_M
+
+CLASS lhc_zi_booking_abhi_m DEFINITION
+  INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS earlynumbering_cba_Booksub FOR NUMBERING
+      IMPORTING entities FOR CREATE Zi_Booking_abhi_m\_Booksub.
+
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR Zi_Booking_abhi_m RESULT result.
+
+    METHODS validateconnection FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_booking_abhi_m~validateconnection.
+
+    METHODS validatecurrencycode FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_booking_abhi_m~validatecurrencycode.
+
+    METHODS validatecustomer FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_booking_abhi_m~validatecustomer.
+
+    METHODS validateflightprice FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_booking_abhi_m~validateflightprice.
+
+    METHODS validatestatus FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_booking_abhi_m~validatestatus.
+
+    METHODS calculatetotalprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zi_booking_abhi_m~calculatetotalprice.
+
+ENDCLASS.
+
+CLASS lhc_zi_booking_abhi_m IMPLEMENTATION.
+
+  METHOD earlynumbering_cba_Booksub.
+
+    DATA: max_booking_suppl_id TYPE /dmo/booking_supplement_id.
+
+    READ ENTITIES OF zi_travel_abhi_m IN LOCAL MODE
+      ENTITY zi_booking_abhi_m BY \_booksub
+      FROM CORRESPONDING #( entities )
+      LINK DATA(booking_supplements).
+
+    " Loop over all unique keys (TravelId + BookingId)
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking_group>)
+         GROUP BY <booking_group>-%tky.
+
+      " Get highest BookingSupplementId from existing DB data
+      max_booking_suppl_id = REDUCE #(
+        INIT max = CONV /dmo/booking_supplement_id( '0' )
+        FOR booksuppl IN booking_supplements USING KEY entity
+        WHERE ( source-TravelId  = <booking_group>-TravelId
+            AND source-BookingId = <booking_group>-BookingId )
+        NEXT max = COND /dmo/booking_supplement_id(
+                     WHEN booksuppl-target-BookingSupplementId > max
+                     THEN booksuppl-target-BookingSupplementId
+                     ELSE max )
+      ).
+
+      " Get highest BookingSupplementId from incoming entities
+      max_booking_suppl_id = REDUCE #(
+        INIT max = max_booking_suppl_id
+        FOR entity IN entities USING KEY entity
+        WHERE ( TravelId  = <booking_group>-TravelId
+            AND BookingId = <booking_group>-BookingId )
+        FOR target IN entity-%target
+        NEXT max = COND /dmo/booking_supplement_id(
+                     WHEN target-BookingSupplementId > max
+                     THEN target-BookingSupplementId
+                     ELSE max )
+      ).
+
+      " Assign new BookingSupplementIds
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<booking>)
+           USING KEY entity
+           WHERE TravelId  = <booking_group>-TravelId
+             AND BookingId = <booking_group>-BookingId.
+
+        LOOP AT <booking>-%target ASSIGNING FIELD-SYMBOL(<booksuppl_wo_numbers>).
+
+          APPEND CORRESPONDING #( <booksuppl_wo_numbers> )
+            TO mapped-zi_booksuppl_abhi_m
+            ASSIGNING FIELD-SYMBOL(<mapped_booksuppl>).
+
+          IF <booksuppl_wo_numbers>-BookingSupplementId IS INITIAL.
+            max_booking_suppl_id += 1.
+            <mapped_booksuppl>-BookingSupplementId = max_booking_suppl_id.
+          ENDIF.
+
+        ENDLOOP.
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF zi_travel_abhi_m IN LOCAL MODE
+      ENTITY zi_travel_abhi_m BY \_Booking
+      FIELDS ( TravelId BookingStatus )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_booking).
+
+    result = VALUE #(
+      FOR ls_booking IN lt_booking
+      (
+        %tky = ls_booking-%tky
+        %features-%assoc-_booksub =
+          COND #(
+            WHEN ls_booking-BookingStatus = 'X'
+            THEN if_abap_behv=>fc-o-disabled
+            ELSE if_abap_behv=>fc-o-enabled
+          )
+      )
+    ).
+
+  ENDMETHOD.
+
+  METHOD validateConnection.
+  ENDMETHOD.
+
+  METHOD validateCurrencyCode.
+  ENDMETHOD.
+
+  METHOD validateCustomer.
+  ENDMETHOD.
+
+  METHOD validateFlightPrice.
+  ENDMETHOD.
+
+  METHOD validateStatus.
+  ENDMETHOD.
+
+  METHOD calculateTotalPrice.
+
+    DATA: it_travel TYPE STANDARD TABLE OF zi_travel_abhi_m
+          WITH UNIQUE HASHED KEY key COMPONENTS TravelId.
+
+    it_travel = CORRESPONDING #(
+      keys
+      DISCARDING DUPLICATES
+      MAPPING TravelId = TravelId
+    ).
+
+    MODIFY ENTITIES OF zi_travel_abhi_m IN LOCAL MODE
+      ENTITY zi_travel_abhi_m
+      EXECUTE recalcTotPrice
+      FROM CORRESPONDING #( keys ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations
+
