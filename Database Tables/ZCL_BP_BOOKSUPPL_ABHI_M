@@ -1,0 +1,155 @@
+CLASS lhc_zi_booksuppl_abhi_m DEFINITION
+  INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS validateCurrencyCode FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_booksuppl_Abhi_m~validateCurrencyCode.
+
+    METHODS validatePrice FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_booksuppl_Abhi_m~validatePrice.
+
+    METHODS validateSupplement FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_booksuppl_Abhi_m~validateSupplement.
+
+    METHODS calculateTotalPrice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR ZI_booksuppl_Abhi_m~calculateTotalPrice.
+
+ENDCLASS.
+
+CLASS lhc_zi_booksuppl_abhi_m IMPLEMENTATION.
+
+  METHOD validateCurrencyCode.
+  ENDMETHOD.
+
+  METHOD validatePrice.
+  ENDMETHOD.
+
+  METHOD validateSupplement.
+  ENDMETHOD.
+
+  METHOD calculateTotalPrice.
+
+    DATA: it_travel TYPE STANDARD TABLE OF zi_travel_abhi_m
+          WITH UNIQUE HASHED KEY key COMPONENTS TravelId.
+
+    it_travel = CORRESPONDING #(
+      keys
+      DISCARDING DUPLICATES
+      MAPPING TravelId = TravelId
+    ).
+
+    MODIFY ENTITIES OF zi_travel_abhi_m IN LOCAL MODE
+      ENTITY zi_travel_abhi_m
+      EXECUTE recalcTotPrice
+      FROM CORRESPONDING #( it_travel ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+4.ZCL_MODIFY_PRACTICE:
+CLASS zcl_modify_practice DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+
+
+CLASS zcl_modify_practice IMPLEMENTATION.
+
+  METHOD if_oo_adt_classrun~main.
+
+    Data: lt_book type table for create Zi_travel_abhi_m\_booking.
+
+*  MODIFY ENTITY zi_travel_abhi_m
+*    CREATE FROM VALUE #(
+*      ( %cid = 'cid1'
+*      %data-BeginDate = '20240225'
+*      %control-BeginDate = if_abap_behv=>mk-on
+*    ) )
+*    Create BY \_booking
+*    FrOM Value #(
+*      ( %cid_ref = 'cid2'
+*      %target = value #( ( %cid = 'cid1'
+*      %data-BookingDate = '20240225'
+*      %control-BookingDate = if_abap_behv=>mk-on ) )
+*
+*    ) )
+*    FAILED   FINAL(it_failed)
+*    MAPPED   FINAL(it_mapped)
+*    REPORTED FINAL(it_result).
+*
+*  IF it_failed IS NOT INITIAL.
+*    out->write( it_failed ).
+*
+*else.
+*commit entitIES.
+*endiF.
+
+*modify entity zi_travel_abhi_m
+*    delETE FROM vaLUE #( ( %key-TravelId = '0000004159' ) )
+*
+* FAILED   FINAL(it_failed1)
+*    MAPPED   FINAL(it_mapped1)
+*    REPORTED FINAL(it_result1).
+*
+*  IF it_failed IS NOT INITIAL.
+*    out->write( it_failed1 ).
+*
+*else.
+*commit entitIES.
+*endiF.
+
+**|{ AUTO FILL CID WITH FIELDS_TAB< }|
+*  MODIFY ENTITY zi_travel_abhi_m
+*    CREATE AUTO FILL CID WITH VALUE #(
+*      (
+*      %data-BeginDate = '20240229'
+*      %control-BeginDate = if_abap_behv=>mk-on
+*    ) )
+*
+*    FAILED   FINAL(it_failed)
+*    MAPPED   FINAL(it_mapped)
+*    REPORTED FINAL(it_result).
+*
+*  IF it_failed IS NOT INITIAL.
+*    out->write( it_failed ).
+*
+*else.
+*commit entitIES.
+*endiF.
+*
+**|{ AUTO FILL CID ] FIELDS(comp1 comp2 ...) with fields_tab }|
+*modify entitIES OF ZI_Travel_ABHI_M
+* entity ZI_Travel_ABHI_M
+* upDATE fields ( BeginDate )
+* with VALUE #(
+*   ( %key-TravelId = '0000004159'
+*     %data-BeginDate = '20240305'
+*        ) )
+*        entity ZI_Travel_ABHI_M
+*        deLETE FROM VALUE #(
+*          ( %key-TravelId = '0000004158' ) ).
+*
+*commit ENTITIES.
+
+    modify entity zi_travel_abhi_m
+      update set FIELDS WITH vaLUE #(
+        ( %key-TravelId = '0000004160'
+          %data-BeginDate = '20240310'
+        )
+      ).
+
+    commit ENTITIES.
+
+  ENDMETHOD.
+
+ENDCLASS.
